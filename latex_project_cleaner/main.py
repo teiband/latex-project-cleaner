@@ -104,8 +104,8 @@ if __name__ == '__main__':
         if delete_figures:
             print(f"I will remove {len(delete_figures)} unused figures.")
             print('', *delete_figures, sep='\n\t')
-            ret = input("Type 'yes' to continue.\n")
-            if ret == 'yes':
+            ret = input("Type [y] to continue.\n")
+            if ret == 'y':
                 print("removing figures...")
                 for fig in delete_figures:
                     os.remove(fig)
@@ -126,11 +126,13 @@ if __name__ == '__main__':
                         i = i + ret
                         ret = tex_str[i:].find('\n')
                         if ret < 0:
-                            break
-                        tex_str = tex_str[:i] + tex_str[i2:]
-                        #i2 = i + ret
-                        #remove_str = tex_str[i: i2 + 1]
-                        #i = i2
+                            if not tex_str.endswith('\n'): # if document does not end with newline, also remove comment
+                                ret = len(tex_str) -1
+                            else:
+                                break
+                        i2 = i + ret
+                        tex_str = tex_str[:i] + tex_str[i2+1:]
+                        #i = i2 - i # start at position where last comment started
                     # write back document without comments
                     with open(path, 'w') as texf:
                         texf.write(tex_str)
