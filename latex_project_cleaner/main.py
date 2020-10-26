@@ -27,13 +27,13 @@ if __name__ == '__main__':
 
     clean_tasks = ['images', 'comments', 'auxiliary', 'main_pdf']
 
-    def new_task():
+    def new_task(text):
         print('------------------------')
+        print(text)
+        if input("Type [y] to continue\n") in ['y','Y']:
+            return True
 
-    ret = input(
-        "Don't blame me, if this tool destroys "
-        "something you created with hard work.\nType 'yes' to continue:\n")
-    if ret != 'yes':
+    if not new_task("Don't blame me, if this tool destroys something you created with hard work."):
         exit(0)
 
     project_dir = os.getcwd()
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         exit(-1)
 
     if 'images' in clean_tasks:
-        new_task()
+        new_task("Removing unused images from project folder.")
         figure_source_dirs = ["figures/src", "images-src"]
         figure_dirs = ["figures", "images"]
         print("removing figure source files...")
@@ -112,44 +112,42 @@ if __name__ == '__main__':
         else:
             print("\tnothing to do.")
     if 'comments' in clean_tasks:
-        new_task()
-        print("removing all comments from tex-files")
-        for path in pathlib.Path(project_dir).rglob('*.tex'):
-            tex_files.append(path)
-            new_str = ""
-            with open(path, 'r') as texf:
-                tex_str = texf.read()
-                i = 0
-                while i < len(tex_str):
-                    ret = tex_str[i:].find('%')
-                    if ret < 0:
-                        break
-                    i = i + ret
-                    ret = tex_str[i:].find('\n')
-                    if ret < 0:
-                        break
-                    tex_str = tex_str[:i] + tex_str[i2:]
-                    #i2 = i + ret
-                    #remove_str = tex_str[i: i2 + 1]
-                    #i = i2
-                # write back document without comments
-                with open(path, 'w') as texf:
-                    texf.write(tex_str)
+        if new_task("Removing all comments from tex-files."):
+            for path in pathlib.Path(project_dir).rglob('*.tex'):
+                tex_files.append(path)
+                new_str = ""
+                with open(path, 'r') as texf:
+                    tex_str = texf.read()
+                    i = 0
+                    while i < len(tex_str):
+                        ret = tex_str[i:].find('%')
+                        if ret < 0:
+                            break
+                        i = i + ret
+                        ret = tex_str[i:].find('\n')
+                        if ret < 0:
+                            break
+                        tex_str = tex_str[:i] + tex_str[i2:]
+                        #i2 = i + ret
+                        #remove_str = tex_str[i: i2 + 1]
+                        #i = i2
+                    # write back document without comments
+                    with open(path, 'w') as texf:
+                        texf.write(tex_str)
 
     if 'aux' in clean_tasks:
-        new_task()
-        print("delete auxiliary files")
-        file_patterns = '*.gz,root.pdf,*.aux,*.out,*.bbl,*.blg,*.log,*.idea,__pycache__'.split(',')
-        for pattern in file_patterns:
-            cur_dir = os.path.join(project_dir, pattern)
-            for f in glob.glob(cur_dir):
-                if os.path.isfile(f):
-                    print('\t', f)
-                    os.remove(f)
+        if new_task("Delete auxiliary files."):
+            file_patterns = '*.gz,root.pdf,*.aux,*.out,*.bbl,*.blg,*.log,*.idea,__pycache__'.split(',')
+            for pattern in file_patterns:
+                cur_dir = os.path.join(project_dir, pattern)
+                for f in glob.glob(cur_dir):
+                    if os.path.isfile(f):
+                        print('\t', f)
+                        os.remove(f)
     if 'main_pdf' in clean_tasks:
-        new_task()
-        for f in glob.glob(os.path.join(project_dir, '*.pdf')):
-            os.remove(f)
+        if new_task("Delete main pdf."):
+            for f in glob.glob(os.path.join(project_dir, '*.pdf')):
+                os.remove(f)
 
     print("\nSuccess")
 
