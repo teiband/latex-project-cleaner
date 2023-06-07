@@ -5,6 +5,7 @@ __author__ = "Thomas Eiband"
 It does the following steps:
 - delete all figure sourcefiles
 - delete all figures, which are not used in the document
+- delete all comments, i.e. strings starting with %
 - delete all auxiliary files
 - delete compiled main document pdf: root.pdf
 
@@ -22,18 +23,31 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-V', '--verbose', action='store_true')
+
+    clean_tasks = ['images', 'comments', 'auxiliary', 'main_pdf', 'aux', 'bibtex_comments']
+    parser.add_argument("-t", "--tasks", nargs='+', help=f"Provide one or multiple tasks: {clean_tasks}")
+    
+    BIBTEX_FILE = "biblatex.bib"
+    bibtex_file = parser.add_argument('-b', '--bibtex_file', type=str)
+    
     args = parser.parse_args()
     verbose = args.verbose
+    
+    if args.tasks:
+        clean_tasks = args.tasks
+    if args.bibtex_file:
+        BIBTEX_FILE = args.bibtex_file
 
-    clean_tasks = ['images', 'comments', 'auxiliary', 'main_pdf']
+    print(f"The following tasks will be done: {clean_tasks}")
 
-    def new_task(text):
+
+    def new_task_prompt(text):
         print('------------------------')
         print(text)
         if input("Type [y] to continue\n") in ['y','Y']:
             return True
 
-    if not new_task("Don't blame me, if this tool destroys something you created with hard work."):
+    if not new_task_prompt("Don't blame me, if this tool destroys something you created with hard work."):
         exit(0)
 
     project_dir = os.getcwd()
@@ -43,7 +57,7 @@ if __name__ == '__main__':
         exit(-1)
 
     if 'images' in clean_tasks:
-        new_task("Removing unused images from project folder.")
+        new_task_prompt("Removing unused images from project folder.")
         figure_source_dirs = ["figures/src", "images-src"]
         figure_dirs = ["figures", "images"]
         print("removing figure source files...")
@@ -112,7 +126,7 @@ if __name__ == '__main__':
         else:
             print("\tnothing to do.")
     if 'comments' in clean_tasks:
-        if new_task("Removing all comments from tex-files."):
+        if new_task_prompt("Removing all comments from tex-files."):
             for path in pathlib.Path(project_dir).rglob('*.tex'):
                 tex_files.append(path)
                 new_str = ""
@@ -138,7 +152,7 @@ if __name__ == '__main__':
                         texf.write(tex_str)
 
     if 'aux' in clean_tasks:
-        if new_task("Delete auxiliary files."):
+        if new_task_prompt("Delete auxiliary files."):
             file_patterns = '*.gz,root.pdf,*.aux,*.out,*.bbl,*.blg,*.log,*.idea,__pycache__'.split(',')
             for pattern in file_patterns:
                 cur_dir = os.path.join(project_dir, pattern)
@@ -147,9 +161,28 @@ if __name__ == '__main__':
                         print('\t', f)
                         os.remove(f)
     if 'main_pdf' in clean_tasks:
-        if new_task("Delete main pdf."):
+        if new_task_prompt("Delete main pdf."):
             for f in glob.glob(os.path.join(project_dir, '*.pdf')):
                 os.remove(f)
+                
+    if 'bibtex_comments' in clean_tasks:
+        print(f"assuming bibtex file: {BIBTEX_FILE}")
+        with open(BIBTEX_FILE, "r+") as f:
+            lines = f.readlines()
+            remove_idx = []
+            # finding comment lines
+            for i, l in enumerate(lines):
+                if l.strip().startswith("comment"):
+                    if verbose:
+                        print("\tfound comment in line ", i)
+                    remove_idx.append(i)
+            # removing comment lines
+            for i in sorted(remove_idx, reverse=True):
+                if verbose:
+                    print("\tdeleting line", i)
+                del lines[i]
+            f.truncate(0)
+            f.writelines(lines)
 
     print("\nSuccess")
 
