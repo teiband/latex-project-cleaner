@@ -166,23 +166,24 @@ if __name__ == '__main__':
                 os.remove(f)
                 
     if 'bibtex_comments' in clean_tasks:
-        print(f"assuming bibtex file: {BIBTEX_FILE}")
-        with open(BIBTEX_FILE, "r+") as f:
-            lines = f.readlines()
-            remove_idx = []
-            # finding comment lines
-            for i, l in enumerate(lines):
-                if l.strip().startswith("comment"):
+        if new_task_prompt("Remove comments from bibtex file."):
+            print(f"assuming bibtex file: {BIBTEX_FILE}")
+            with open(BIBTEX_FILE, "r+") as f:
+                lines = f.readlines()
+                remove_idx = []
+                # finding comment lines
+                for i, l in enumerate(lines):
+                    if l.strip().startswith("comment"):
+                        if verbose:
+                            print("\tfound comment in line ", i)
+                        remove_idx.append(i)
+                # removing comment lines
+                for i in sorted(remove_idx, reverse=True):
                     if verbose:
-                        print("\tfound comment in line ", i)
-                    remove_idx.append(i)
-            # removing comment lines
-            for i in sorted(remove_idx, reverse=True):
-                if verbose:
-                    print("\tdeleting line", i)
-                del lines[i]
-            f.truncate(0)
-            f.writelines(lines)
+                        print("\tdeleting line", i)
+                    del lines[i]
+                f.truncate(0)
+                f.writelines(lines)
 
     print("\nSuccess")
 
