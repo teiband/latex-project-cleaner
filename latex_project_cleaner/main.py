@@ -18,6 +18,7 @@ import pathlib
 import glob
 import shutil
 import argparse
+from distutils.dir_util import copy_tree
 
 if __name__ == '__main__':
 
@@ -38,6 +39,11 @@ if __name__ == '__main__':
     if args.bibtex_file:
         BIBTEX_FILE = args.bibtex_file
 
+    INPUT_FOLDER = os.getcwd()
+    OUTPUT_FOLDER = os.path.join(INPUT_FOLDER, "../", INPUT_FOLDER + "_clean_gen")
+    copy_tree(".", OUTPUT_FOLDER)
+    print(f"Copied {INPUT_FOLDER}  -->  {OUTPUT_FOLDER}")
+
     print(f"The following tasks will be done: {clean_tasks}")
 
 
@@ -50,7 +56,8 @@ if __name__ == '__main__':
     if not new_task_prompt("Don't blame me, if this tool destroys something you created with hard work."):
         exit(0)
 
-    project_dir = os.getcwd()
+    os.chdir(OUTPUT_FOLDER)
+    project_dir = OUTPUT_FOLDER
 
     if not glob.glob(os.path.join(project_dir, '*.tex')):
         print("I did not find any *.tex files here, this seems not to be a latex project directory. Exiting.")
